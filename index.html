@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sabnahis Library System</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 0; background: #fdf6f0; }
+header { background: #8B4513; color: #fff; padding: 15px; }
+nav a { color: #fff; margin-right: 15px; text-decoration: none; font-weight: bold; }
+section { display: none; padding: 20px; }
+section.active { display: block; }
+h2 { color: #8B4513; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+th { background: #D2B48C; color: #fff; }
+input, button, select { padding: 6px; margin: 5px 0; width: 200px; }
+button { background: #8B4513; color: #fff; border: none; cursor: pointer; }
+button:hover { background: #A0522D; }
+footer { text-align: center; padding: 10px; background: #D2B48C; }
+.home-img { max-width: 50%; height: auto; margin-bottom: 15px; border-radius: 8px; display: block; }
+.role-buttons button { width: 150px; margin-right: 10px; }
+</style>
+</head>
+<body>
+
+<header>
+<h1>Sablayan National Comprehensive High School Library</h1>
+<nav>
+<a href="#" onclick="showPage('home')">Home</a>
+<a href="#" onclick="showPage('catalog')">Book Catalog</a>
+<a href="#" onclick="showPage('borrow')">Borrow</a>
+<a href="#" onclick="showPage('return')">Return</a>
+<a href="#" onclick="showPage('history')">History</a>
+<a href="#" onclick="showPage('admin')">Admin</a>
+</nav>
+</header>
+
+<!-- HOME & ROLE SELECTION -->
+<section id="home">
+<div class="hero">
+<h2>Welcome to Sabnahis Library</h2>
+<p>Explore, borrow, and return books efficiently through this online platform for Sabnahis National Comprehensive High School.</p>
+<img class="home-img" src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f" alt="Library">
+</div>
+<div class="role-buttons">
+<p>Please select your role to continue:</p>
+<button onclick="selectRole('student')">Student</button>
+<button onclick="selectRole('teacher')">Teacher</button>
+<button onclick="selectRole('librarian')">Librarian</button>
+</div>
+</section>
+
+<!-- LIBRARIAN LOGIN -->
+<section id="login">
+<h2>Librarian Login</h2>
+<input id="adminUser" placeholder="Username" /><br>
+<input id="adminPass" type="password" placeholder="Password" /><br>
+<button onclick="loginAdmin()">Login</button>
+</section>
+
+<!-- ADMIN PAGE -->
+<section id="admin">
+<h2>Admin Page</h2>
+<h3>Add/Edit Book</h3>
+<input id="bookTitle" placeholder="Title" />
+<input id="bookAuthor" placeholder="Author" />
+<button onclick="addOrEditBook()">Add/Edit Book</button>
+
+<h3>Manage History</h3>
+<table id="adminHistoryTable">
+<tr><th>Name</th><th>Grade/Section</th><th>Role</th><th>Book</th><th>Borrow Date</th><th>Return Date</th><th>Action</th><th>Modify</th></tr>
+</table>
+</section>
+
+<!-- BOOK CATALOG -->
+<section id="catalog">
+<h2>Book Catalog</h2>
+<table id="catalogTable">
+<tr><th>Title</th><th>Author</th><th>Status</th></tr>
+</table>
+</section>
+
+<!-- BORROW BOOK -->
+<section id="borrow">
+<h2>Borrow Book</h2>
+<input id="borrower" placeholder="Name" />
+<input id="grade" placeholder="Grade (if Student)" />
+<input id="section" placeholder="Section" />
+<select id="bookToBorrow"></select>
+<input id="borrowDate" type="date" />
+<button onclick="borrowBook()">Borrow</button>
+</section>
+
+<!-- RETURN BOOK -->
+<section id="return">
+<h2>Return Book</h2>
+<input id="returner" placeholder="Name" />
+<input id="returnGrade" placeholder="Grade (if Student)" />
+<input id="returnSection" placeholder="Section" />
+<select id="bookToReturn"></select>
+<input id="returnDate" type="date" />
+<button onclick="returnBook()">Return Book</button>
+</section>
+
+<!-- BORROW HISTORY -->
+<section id="history">
+<h2>Borrowing History</h2>
+<table id="historyTable">
+<tr><th>Name</th><th>Grade/Section</th><th>Role</th><th>Book</th><th>Borrow Date</th><th>Return Date</th><th>Action</th></tr>
+</table>
+</section>
+
+<footer>
+<p>© 2026 Sablayan National High School</p>
+</footer>
+
+<script>
+let books = [];
+let history = [];
+let isAdmin = false;
+let role = '';
+
+function showPage(pageId) {
+    if(pageId==='admin' && !isAdmin) { alert('Access denied!'); return; }
+    document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    renderCatalog(); renderHistory(); renderAdminHistory(); renderBorrowBookOptions(); renderReturnBookOptions();
+}
+
+function selectRole(selectedRole){
+    role = selectedRole;
+    if(role==='student' || role==='teacher') showPage('catalog');
+    else showPage('login');
+}
+
+// Librarian login
+function loginAdmin(){
+    const user = document.getElementById('adminUser').value;
+    const pass = document.getElementById('adminPass').value;
+    if(user==='admin' && pass==='1234'){
+        isAdmin = true;
+        alert('Welcome, Librarian!');
+        showPage('admin');
+    } else alert('Invalid credentials');
+    document.getElementById('adminUser').value = '';
+    document.getElementById('adminPass').value = '';
+}
+
+// Add or Edit Book
+function addOrEditBook(){
+    const title = document.getElementById('bookTitle').value;
+    const author = document.getElementById('bookAuthor').value;
+    if(!title || !author){ alert('Enter both Title and Author'); return; }
+    let book = books.find(b=>b.title===title);
+    if(book){ book.author = author; alert('Book updated'); }
+    else{ books.push({title, author, status:'Available'}); alert('Book added'); }
+    document.getElementById('bookTitle').value = '';
+    document.getElementById('bookAuthor').value = '';
+    renderCatalog();
+}
+
+// Render catalog
+function renderCatalog(){
+    const table = document.getElementById('catalogTable');
+    table.innerHTML = '<tr><th>Title</th><th>Author</th><th>Status</th></tr>';
+    books.forEach(b => {
+        table.innerHTML += `<tr><td>${b.title}</td><td>${b.author}</td><td>${b.status}</td></tr>`;
+    });
+}
+
+// Borrow Book options
+function renderBorrowBookOptions(){
+    const select = document.getElementById('bookToBorrow');
+    select.innerHTML = '';
+    books.filter(b=>b.status==='Available').forEach(b=>{
+        let option = document.createElement('option'); option.value=b.title; option.text=b.title; select.add(option);
+    });
+}
+
+// Return Book options
+function renderReturnBookOptions(){
+    const select = document.getElementById('bookToReturn');
+    select.innerHTML = '';
+    books.filter(b=>b.status==='Borrowed').forEach(b=>{
+        let option = document.createElement('option'); option.value=b.title; option.text=b.title; select.add(option);
+    });
+}
+
+// Borrow Book
+function borrowBook(){
+    const name = document.getElementById('borrower').value;
+    const grade = document.getElementById('grade').value;
+    const section = document.getElementById('section').value;
+    const date = document.getElementById('borrowDate').value;
+    const bookTitle = document.getElementById('bookToBorrow').value;
+    if(!name || !bookTitle || !date){ alert('Fill all required fields'); return; }
+
+    const book = books.find(b=>b.title===bookTitle);
+    if(book){ book.status='Borrowed'; }
+
+    history.push({
+        name,
+        gradeSection: role==='teacher'? section : grade + ' / ' + section,
+        role,
+        book: bookTitle,
+        borrowDate: date,
+        returnDate: '-',
+        action: 'Borrowed'
+    });
+
+    document.getElementById('borrower').value = '';
+    document.getElementById('grade').value = '';
+    document.getElementById('section').value = '';
+    document.getElementById('borrowDate').value = '';
+    renderCatalog(); renderHistory(); renderAdminHistory(); renderReturnBookOptions();
+}
+
+// Return Book
+function returnBook(){
+    const name = document.getElementById('returner').value;
+    const grade = document.getElementById('returnGrade').value;
+    const section = document.getElementById('returnSection').value;
+    const date = document.getElementById('returnDate').value;
+    const bookTitle = document.getElementById('bookToReturn').value;
+    if(!name || !bookTitle || !date){ alert('Fill all required fields'); return; }
+
+    const book = books.find(b=>b.title===bookTitle);
+    if(book){ book.status='Available'; }
+
+    history.push({
+        name,
+        gradeSection: role==='teacher'? section : grade + ' / ' + section,
+        role,
+        book: bookTitle,
+        borrowDate: '-',
+        returnDate: date,
+        action: 'Returned'
+    });
+
+    document.getElementById('returner').value = '';
+    document.getElementById('returnGrade').value = '';
+    document.getElementById('returnSection').value = '';
+    document.getElementById('returnDate').value = '';
+    renderCatalog(); renderHistory(); renderAdminHistory(); renderReturnBookOptions(); renderBorrowBookOptions();
+}
+
+// Render Borrowing History
+function renderHistory(){
+    const table = document.getElementById('historyTable');
+    table.innerHTML='<tr><th>Name</th><th>Grade/Section</th><th>Role</th><th>Book</th><th>Borrow Date</th><th>Return Date</th><th>Action</th></tr>';
+    history.forEach(h=>{
+        table.innerHTML += `<tr>
+            <td>${h.name}</td><td>${h.gradeSection}</td><td>${h.role}</td>
+            <td>${h.book}</td><td>${h.borrowDate}</td><td>${h.returnDate}</td><td>${h.action}</td>
+        </tr>`;
+    });
+}
+
+// Render Admin History
+function renderAdminHistory(){
+    if(!isAdmin) return;
+    const table = document.getElementById('adminHistoryTable');
+    table.innerHTML='<tr><th>Name</th><th>Grade/Section</th><th>Role</th><th>Book</th><th>Borrow Date</th><th>Return Date</th><th>Action</th><th>Modify</th></tr>';
+    history.forEach((h,index)=>{
+        table.innerHTML += `<tr>
+            <td>${h.name}</td><td>${h.gradeSection}</td><td>${h.role}</td>
+            <td>${h.book}</td><td>${h.borrowDate}</td><td>${h.returnDate}</td><td>${h.action}</td>
+            <td><button onclick='editHistory(${index})'>Edit</button> <button onclick='deleteHistory(${index})'>Delete</button></td>
+        </tr>`;
+    });
+}
+
+// Edit / Delete
+function editHistory(index){
+    const record = history[index];
+    record.name = prompt('Name', record.name);
+    record.gradeSection = prompt('Grade/Section', record.gradeSection);
+    record.role = prompt('Role', record.role);
+    record.book = prompt('Book', record.book);
+    record.borrowDate = prompt('Borrow Date', record.borrowDate);
+    record.returnDate = prompt('Return Date', record.returnDate);
+    record.action = prompt('Action', record.action);
+    renderHistory(); renderAdminHistory(); renderBorrowBookOptions(); renderReturnBookOptions();
+}
+
+function deleteHistory(index){
+    if(confirm('Delete this record?')){
+        history.splice(index,1);
+        renderHistory(); renderAdminHistory(); renderBorrowBookOptions(); renderReturnBookOptions();
+    }
+}
+
+// Initial page
+showPage('home');
+</script>
+
+</body>
+</html>
